@@ -7,14 +7,29 @@ app = quart_cors.cors(quart.Quart(__name__), allow_origin="https://chat.openai.c
 
 @app.route('/')
 async def index():
-    return "Hello!"
+    return "Welcome!"
 
-@app.route('/reverse', methods=['PUT'])
+@app.put('/reverse')
 async def reverse_text():
-    data = await request.get_data()
-    text = data.decode('utf-8')
+    """
+    Reverse the provided text
+    """
+    request = await quart.request.get_json(force=True)
+    text = request["text"]
     reversed_text = text[::-1]
-    return reversed_text
+    json_response = json.dumps({"text": reversed_text})
+    return quart.Response(json_response, mimetype="text/json", status=200)
+
+@app.put('/dots')
+async def dot_text():
+    """
+    Add dots between every 3 characters in the text
+    """
+    request = await quart.request.get_json(force=True)
+    text = request["text"]
+    dotted_text = '...'.join(text[i:i+3] for i in range(0, len(text), 3))
+    json_response = json.dumps({"text": dotted_text})
+    return quart.Response(json_response, mimetype="text/json", status=200)
 
 @app.get("/.well-known/logo.png")
 async def plugin_logo():
@@ -40,26 +55,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-#@app.put("/todos/<string:username>")
-#async def add_todo(username):
-#    request = await quart.request.get_json(force=True)
-#    if username not in _TODOS:
-#        _TODOS[username] = []
-#    _TODOS[username].append(request["todo"])
-#    return quart.Response(response='OK', status=200)
-
-#@app.get("/todos/<string:username>")
-#async def get_todos(username):
-#    return quart.Response(response=json.dumps(_TODOS.get(username, [])), status=200)
-
-#@app.delete("/todos/<string:username>")
-#async def delete_todo(username):
-#    request = await quart.request.get_json(force=True)
-#    todo_idx = request["todo_idx"]
-    # fail silently, it's a simple plugin
-#    if 0 <= todo_idx < len(_TODOS[username]):
-#        _TODOS[username].pop(todo_idx)
-#    return quart.Response(response='OK', status=200)
-
