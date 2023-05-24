@@ -1,3 +1,4 @@
 # Proto_PlugIn_ChatGPT
 
-Blah Blah Blah
+A test plugin for development. Modified version of "https://github.com/openai/plugins-quickstart"
+
