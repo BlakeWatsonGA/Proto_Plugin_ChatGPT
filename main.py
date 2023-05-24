@@ -1,49 +1,20 @@
 import json
 import quart
 import quart_cors
-from quart import Quart, request
-from quart_cors import cors
-from quart_sqlalchemy import SQLAlchemy
+from quart import request
 
 app = quart_cors.cors(quart.Quart(__name__), allow_origin="https://chat.openai.com")
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///reversed_strings.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-db = SQLAlchemy(app)
-
-class ReversedString(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    original_text = db.Column(db.String(255), nullable=False)
-    reversed_text = db.Column(db.String(255), nullable=False)
-
-    def __init__(self, original_text, reversed_text):
-        self.original_text = original_text
-        self.reversed_text = reversed_text
-
-    def to_dict(self):
-        return {'id': self.id, 'original_text': self.original_text, 'reversed_text': self.reversed_text}
+@app.route('/')
+async def index():
+    return "Hello!"
 
 @app.route('/reverse', methods=['PUT'])
 async def reverse_text():
     data = await request.get_data()
     text = data.decode('utf-8')
     reversed_text = text[::-1]
-
-    # Store the reversed string in the database
-    reversed_string = ReversedString(original_text=text, reversed_text=reversed_text)
-    db.session.add(reversed_string)
-    db.session.commit()
-
-    # Generate a URL to access the reversed string in the database
-    database_url = request.host_url + 'reversed_strings'
-    return database_url
-
-@app.route('/reversed_strings', methods=['GET'])
-async def get_reversed_strings():
-    reversed_strings = ReversedString.query.all()
-    reversed_strings_dict = [r.to_dict() for r in reversed_strings]
-    return {'reversed_strings': reversed_strings_dict}
+    return reversed_text
 
 @app.get("/.well-known/logo.png")
 async def plugin_logo():
@@ -64,9 +35,11 @@ async def openapi_spec():
         text = f.read()
         return quart.Response(text, mimetype="text/yaml")
 
-if __name__ == '__main__':
-    db.create_all()
+def main():
     app.run(debug=True, host="0.0.0.0", port=5003)
+
+if __name__ == "__main__":
+    main()
 
 
 #@app.put("/todos/<string:username>")
